@@ -1,0 +1,79 @@
+services:
+  apache:
+    image: httpd:2.4
+    volumes:
+      - ./src:/usr/local/apache2/htdocs
+      - ./_setup/apache/httpd.conf:/usr/local/apache2/conf/httpd.conf
+    networks:
+      - default
+    restart: unless-stopped
+    depends_on:
+      - php_fpm
+      - mysql
+
+  php_fpm:
+    build:
+      context: ./_setup/php
+      dockerfile: Dockerfile
+      args:
+        user: ${SYSTEM_USER_NAME}
+        uid: ${SYSTEM_USER_ID}
+    networks:
+      - default
+    volumes:
+      - ./src:/var/www
+      - ./_setup/php/php-overrides.ini:/usr/local/etc/php/conf.d/99-overrides.ini
+    restart: unless-stopped
+    environment:
+      - TZ=${FPM_TIMEZONE}
+
+  mysql:
+    image: mysql:9.2
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: "${DB_ROOT_PASSWORD}"
+      MYSQL_DATABASE: "${DB_NAME}"
+      MYSQL_USER: "${DB_USER}"
+      MYSQL_PASSWORD: "${DB_PASSWORD}"
+      TZ: "${MYSQL_TIMEZONE}"
+    command: ['mysqld', '--character-set-server=utf8mb4', '--collation-server=utf8mb4_unicode_ci']
+    volumes:
+      - ./_volumes/mysql:/docker-entrypoint-initdb.d
+    networks:
+      - default
+
+  pma:
+    image: phpmyadmin:5.2-apache
+    environment:
+      PMA_HOST: mysql
+      PMA_USER: "${DB_USER}"
+      PMA_PASSWORD: "${DB_PASSWORD}"
+    depends_on:
+      - mysql
+    networks:
+      - default
+
+  smtp:
+    image: axllent/mailpit:v1.22
+    restart: unless-stopped
+    volumes:
+      - ./_volumes/mailpit:/data
+    networks:
+      - default
+    environment:
+      MP_DATABASE: /data/mailpit.db
+      MP_SMTP_AUTH_ACCEPT_ANY: 1
+      MP_SMTP_AUTH_ALLOW_INSECURE: 1
+
+  memcached:
+    image: memcached:1.6-bullseye
+    restart: unless-stopped
+    networks:
+      - default
+    command:
+      - --conn-limit=1024
+      - --memory-limit=64
+      - --threads=4
+
+networks:
+  default:

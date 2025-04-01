@@ -1,0 +1,12 @@
+### IDE files ###
+.idea
+.vscode
+**/nbproject/
+.metadata
+.settings
+.loadpath
+.recommenders
+
+### Local project files
+_volumes/*
+.env

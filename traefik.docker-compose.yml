@@ -1,0 +1,35 @@
+services:
+  apache:
+    networks:
+      - proxy
+    labels:
+      - 'traefik.enable=true'
+      - 'traefik.http.routers.${PROJECT_NAME}.rule=Host(`${TRAEFIK_DOMAIN}`)'
+      - 'traefik.http.routers.${PROJECT_NAME}.entrypoints=${TRAEFIK_ENTRYPOINTS}'
+      - 'traefik.http.services.${PROJECT_NAME}.loadbalancer.server.port=80'
+      - 'traefik.docker.network=${TRAEFIK_NETWORK}'
+
+  pma:
+    networks:
+      - proxy
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.${PROJECT_NAME}_pma_router.rule=Host(`pma.${TRAEFIK_DOMAIN}`)"
+      - "traefik.http.routers.${PROJECT_NAME}_pma_router.entrypoints=${TRAEFIK_ENTRYPOINTS}"
+      - "traefik.http.services.${PROJECT_NAME}_pma.loadbalancer.server.port=80"
+      - "traefik.docker.network=${TRAEFIK_NETWORK}"
+
+  smtp:
+    networks:
+      - proxy
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.${PROJECT_NAME}_smtp.rule=Host(`mailpit.${TRAEFIK_DOMAIN}`)"
+      - "traefik.http.routers.${PROJECT_NAME}_smtp.entrypoints=${TRAEFIK_ENTRYPOINTS}"
+      - "traefik.http.services.${PROJECT_NAME}_smtp.loadbalancer.server.port=8025"
+      - "traefik.docker.network=${TRAEFIK_NETWORK}"
+
+networks:
+  proxy:
+    name: ${TRAEFIK_NETWORK}
+    external: true
