@@ -55,7 +55,7 @@ test-config-ports:
 
 laravel-init:
 	rm -rf ./src/public
-	docker compose exec php_fpm composer create-project laravel/laravel . "11.*"
+	docker compose exec php_fpm composer create-project laravel/laravel . "12.*"
 
 site-off:
 	docker compose exec php_fpm php artisan down
